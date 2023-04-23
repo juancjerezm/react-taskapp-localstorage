@@ -1,26 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { TaskCreator } from "./components/TaskCreator";
+import { TaskTable } from "./components/TaskTable";
+
 import "./App.css";
 
 function App() {
-  const [newTaskName, setNewTaskName] = useState();
+  const [taskItems, setTaskItems] = useState([]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    localStorage.setItem("task", newTaskName);
-    setNewTaskName("");
+  function createNewTask(taskName) {
+    if (!taskItems.find((t) => t.name === taskName)) {
+      setTaskItems([...taskItems, { name: taskName, done: false }]);
+    }
+  }
+
+  const toggleTask = (task) => {
+    setTaskItems(
+      taskItems.map((t) => (t.name === task.name ? { ...t, done: !t.done } : t))
+    );
   };
+
+  useEffect(() => {
+    let data = localStorage.getItem("tasks");
+    if (data) {
+      setTaskItems(JSON.parse(data));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(taskItems));
+  }, [taskItems]);
 
   return (
     <div className="App">
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter a new task"
-          value={newTaskName}
-          onChange={(e) => setNewTaskName(e.target.value)}
-        ></input>
-        <button type="submit">Save Task </button>
-      </form>
+      <TaskCreator createNewTask={createNewTask} />
+      <TaskTable tasks={taskItems} toggleTask={toggleTask} />
     </div>
   );
 }
